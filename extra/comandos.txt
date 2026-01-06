@@ -1,0 +1,93 @@
+# ============================================
+# Docker Account Login
+# ============================================
+# Username:inf25dw1g13
+# Email:a046756@umaia.pt
+# Password:devweb123
+
+#============================================
+# DOCKER COMPOSE - Food Delivery API - prod
+# ============================================
+
+#   docker compose -f docker-compose.prod.yaml up -d
+#   docker compose -f docker-compose.prod.yaml down -v
+
+# ============================================
+# DOCKER COMPOSE - Food Delivery API - dev
+# ============================================
+
+#   docker compose -f docker-compose.dev.yaml up -d --build
+#   docker compose -f docker-compose.dev.yaml down -v
+
+# ============================================
+# Push Dockerhub
+# ============================================
+
+# 1. LoopBack 4 API:
+#    cd src/food-delivery-lb4
+#    docker build -t inf25dw1g13/food-delivery-lb:latest .
+#    docker push inf25dw1g13/food-delivery-lb:latest
+
+# 2. React Admin Backoffice:
+#    cd src/food_react_app
+#    docker build -f Dockerfile.prod -t inf25dw1g13/food-delivery-react-admin:latest .
+#    docker push inf25dw1g13/food-delivery-react-admin:latest
+
+# 3. MariaDB Master:
+#    cd src/mariadb-master
+#    docker build -t inf25dw1g13/food-delivery-mariadb-master:latest .
+#    docker push inf25dw1g13/food-delivery-mariadb-master:latest
+
+# 4. MariaDB Réplicas:
+#    cd src/mariadb-replica
+#    docker build -t inf25dw1g13/food-delivery-mariadb-replica:latest .
+#    docker push inf25dw1g13/food-delivery-mariadb-replica:latest
+
+# 5. MaxScale:
+#    cd src/maxscale
+#    docker build -t inf25dw1g13/food-delivery-maxscale:latest .
+#    docker push inf25dw1g13/food-delivery-maxscale:latest
+
+# ============================================
+# Testes de Base de Dados
+# ============================================
+
+# Testar propriedades ACID (16 testes)
+cd extra
+python3 test_acid.py
+
+# Verificar status dos servidores no MaxScale
+docker exec -it food_delivery_maxscale maxctrl list servers
+
+# Verificar replicação no Master
+docker exec -it food_delivery_master mysql -uroot -proot_password -e "SHOW MASTER STATUS;"
+
+# Verificar replicação nas Réplicas
+docker exec -it food_delivery_replica1 mysql -uroot -proot_password -e "SHOW SLAVE STATUS\G"
+
+# Consultar audit log
+docker exec -it food_delivery_master mysql -uroot -proot_password food_delivery -e "SELECT * FROM view_audit_log LIMIT 10;"
+
+# ============================================
+# Testar endpoints - no loopback
+# ============================================
+
+# cd src/food-delivery-lb4
+# npm run test:endpoints
+ou
+# node test-all-endpoints.js
+# node test-all-endpoints.js http://localhost:3000
+
+# ============================================
+# Repositório DockerHub
+# ============================================
+# Organização: inf25dw1g13
+# URL: https://hub.docker.com/u/inf25dw1g13
+
+# Imagens disponíveis:
+#   - inf25dw1g13/food-delivery-lb:latest
+#   - inf25dw1g13/food-delivery-react-admin:latest
+#   - inf25dw1g13/food-delivery-mariadb-master:latest
+#   - inf25dw1g13/food-delivery-mariadb-replica:latest
+#   - inf25dw1g13/food-delivery-maxscale:latest
+
