@@ -1,4 +1,5 @@
-// Dashboard criado com ajuda artificial. Maior dificuldade: centrar os cards
+// Dashboard criado com ajuda IA. Maior dificuldade: centrar os cards
+// Prompts consistiram na criação de um dashboard básico com display de estatisticas mais importantes para a base de dados e debugging
 import React from 'react';
 import {
     Card,
