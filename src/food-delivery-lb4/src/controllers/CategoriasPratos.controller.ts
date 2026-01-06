@@ -1,3 +1,5 @@
+//Os filtros do loopback precisaram de ajuda AI e muito tempo de research e noites sem dormir para depois eu descobrir que provabelmente nao muda nada porque no powerpoint só tem o filtro do react
+
 import {
   Count,
   CountSchema,
