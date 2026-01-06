@@ -1,3 +1,4 @@
+// Dashboard criado com ajuda artificial. Maior dificuldade: centrar os cards
 import React from 'react';
 import {
     Card,
@@ -511,7 +512,7 @@ export const RestaurantDashboard = () => {
                     </Grid>
                 </Grid>
 
-                {/* LINHA 3: Gráficos Detalhados */}
+                {/* LINHA 3: Gráficos */}
                 <Grid container spacing={3} justifyContent="center">
                     <Grid item xs={12} md={6} lg={3}>
                         <PaymentMethodsChart pedidos={pedidos} isDark={isDark} />
