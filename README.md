@@ -126,7 +126,6 @@ O projeto inclui implementações  de base de dados:
 **Frontend (React Admin):**
 * `react-admin` - Framework de backoffice
 * `react-admin-lb4` - Provider para LoopBack 4
-* `recharts` - Biblioteca de gráficos
 
 ## Report
 
