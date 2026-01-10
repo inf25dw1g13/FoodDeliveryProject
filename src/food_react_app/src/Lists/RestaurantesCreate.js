@@ -15,12 +15,12 @@ export const RestaurantesCreate = (props) => (
     <SimpleForm>
       <TextInput source="nome" validate={[required()]} fullWidth />
       <TextInput source="morada" validate={[required()]} fullWidth />
-      <ReferenceInput source="codpostal" reference="codpostais" validate={[required()]} fullWidth>
+      <ReferenceInput source="codpostal" reference="codpostais" fullWidth>
         <SelectInput optionText={choice => `${choice.codpostal} - ${choice.localidade}, ${choice.cidade}`} optionValue="codpostal" />
       </ReferenceInput>
       <TextInput source="telefone" validate={[required()]} fullWidth />
       <TextInput source="email" validate={[email(), required()]} fullWidth />
-      <ReferenceInput source="especialidade_id" reference="categorias-pratos" validate={[required()]} fullWidth>
+      <ReferenceInput source="especialidade_id" reference="categorias-pratos" fullWidth>
         <SelectInput optionText="nome" optionValue="id" />
       </ReferenceInput>
       <TextInput source="descricao" multiline fullWidth />
