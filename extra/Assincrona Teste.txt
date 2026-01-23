@@ -1,0 +1,25 @@
+# Assícrona Teste
+
+# Pause a réplica por um momento:
+
+docker exec -it food_delivery_replica1 mariadb -u root -proot_password -e "STOP SLAVE;"
+
+# Faça a inserção no Master:
+
+docker exec -it food_delivery_master mariadb -u api_user -papi_password food_delivery -e "INSERT INTO categorias_pratos (nome) VALUES ('Prova_Definitiva');"
+
+# Tente ler na Réplica (Ela vai retornar vazio):
+
+docker exec -it food_delivery_replica1 mariadb -u api_user -papi_password food_delivery -e "SELECT nome FROM categorias_pratos WHERE nome = 'Prova_Definitiva';"
+
+# Ligue a réplica de novo e veja o dado "aparecer":
+
+docker exec -it food_delivery_replica1 mariadb -u root -proot_password -e "START SLAVE;"
+sleep 2
+docker exec -it food_delivery_replica1 mariadb -u api_user -papi_password food_delivery -e "SELECT nome FROM categorias_pratos WHERE nome = 'Prova_Definitiva';"
+
+
+
+# Lógica Teste
+
+docker exec -it food_delivery_master mariadb -u root -proot_password -e "SHOW BINLOG EVENTS IN 'mysql-bin.000001' LIMIT 10;"

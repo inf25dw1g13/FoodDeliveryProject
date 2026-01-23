@@ -1,0 +1,19 @@
+# Passo 1: Criar um dado no Master
+
+docker exec -it food_delivery_master mariadb -u api_user -papi_password food_delivery -e "INSERT INTO categorias_pratos (nome) VALUES ('Teste Strict');"
+
+# Passo 2: "Sabotar" a Réplica (Provocar a inconsistência)
+
+docker exec -it food_delivery_replica1 mariadb -u root -proot_password food_delivery -e "DELETE FROM categorias_pratos WHERE nome = 'Teste Strict';"
+
+# Passo 3: Tentar alterar o dado no Master
+
+docker exec -it food_delivery_master mariadb -u api_user -papi_password food_delivery -e "UPDATE categorias_pratos SET nome = 'Teste Strict Alterado' WHERE nome = 'Teste Strict';"
+
+# Passo 4: Verificar a Replicação Parada
+
+docker exec -it food_delivery_replica1 mariadb -u root -proot_password -e "SHOW SLAVE STATUS\G" | grep -E "Slave_IO_Running|Slave_SQL_Running|Last_SQL_Error"
+
+# Como consertar após o teste:
+
+docker exec -it food_delivery_replica1 mariadb -u root -proot_password -e "STOP SLAVE; SET GLOBAL gtid_slave_pos = 'ID_DO_MASTER'; START SLAVE;"

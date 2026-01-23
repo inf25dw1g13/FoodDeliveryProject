@@ -1,0 +1,72 @@
+# Executando Comandos no Master (SELECT e UPDATE)
+
+docker exec -it food_delivery_master mariadb -u api_user -papi_password
+food_delivery
+
+#Exemplos de SELECT no Master:
+
+SELECT * FROM clientes LIMIT 5;
+SELECT nome, email FROM entregadores WHERE estado = 'disponivel';
+
+# Exemplos de UPDATE no Master:
+
+UPDATE clientes SET email = 'novo_email@example.com' WHERE id = 1;
+UPDATE entregadores SET estado = 'ocupado' WHERE id = 1;
+
+# Executando Comandos na Réplica
+
+docker exec -it food_delivery_replica1 mariadb -u api_user -papi_password
+food_delivery
+
+USE food_delivery;
+
+# Exemplos de SELECT na Réplica:
+
+SELECT * FROM clientes LIMIT 5;
+
+# Tentativa de UPDATE na Réplica (irá falhar):
+
+UPDATE clientes SET email = 'teste@teste.com' WHERE id = 2;
+
+
+
+# Caso a replica 1 fique com problemas
+
+docker exec -it food_delivery_replica1 mariadb -u root -proot_password -e "STOP SLAVE; RESET SLAVE ALL; RESET MASTER; SET GLOBAL gtid_slave_pos = '1-1-212'; CHANGE MASTER TO MASTER_HOST='mariadb-master', MASTER_USER='repl', MASTER_PASSWORD='repl_password', MASTER_USE_GTID=slave_pos; START SLAVE;"
+
+
+# Verificar status
+
+docker exec -it food_delivery_master mariadb -u root -root_password
+food_delivery
+SHOW SLAVE STATUS\G;
+SHOW MASTER STATUS;
+
+
+
+
+
+# Teste Failover:
+
+# 1. Verificar o estado inicial
+
+docker exec -it food_delivery_maxscale maxctrl list servers
+
+# 2. O Failover: Derrubar o Master
+
+docker stop food_delivery_master
+
+# 3. Verificar a Reação do MaxScale
+Aguarde uns 10 segundos e veja quem o MaxScale promoveu:
+
+docker exec -it food_delivery_maxscale maxctrl list servers
+
+# O master-server deve estar como Down.
+# Uma das réplicas (provavelmente a replica1-server) deve ter sido promovida automaticamente para Master, Running.
+
+# 4. O Rejoin: Trazer o Master original de volta
+
+docker start food_delivery_master
+
+# O Master original voltará como Slave
+

@@ -1,0 +1,50 @@
+
+docker exec -it food_delivery_master mariadb -u api_user -papi_password
+food_delivery
+
+
+USE food_delivery;
+
+INSERT INTO ingredientes (nome, tipo, alergeno)
+VALUES ('Carne de Vaca', 'carne', 0);
+
+INSERT INTO ingredientes (nome, tipo, alergeno)
+VALUES ('Leite Magro', 'laticinio', 1);
+
+UPDATE ingredientes
+SET tipo = 'laticinio sem lactose',
+    alergeno = 0
+WHERE nome = 'Leite Magro';
+
+DELETE FROM ingredientes
+WHERE nome = 'Carne de Vaca';
+
+SELECT
+    id,
+    tabela_nome,
+    operacao,
+    registro_id,
+    dados_anteriores,
+    dados_novos,
+    data_hora
+FROM audit_log
+WHERE tabela_nome = 'ingredientes'
+ORDER BY id;
+
+
+SELECT
+    tabela_nome,
+    operacao,
+    registro_id,
+    dados_anteriores_formatados,
+    dados_novos_formatados,
+    data_hora
+FROM view_audit_log
+WHERE tabela_nome = 'ingredientes'
+ORDER BY data_hora;
+
+SELECT *
+FROM ingredientes
+WHERE nome = 'Leite Magro';
+
+

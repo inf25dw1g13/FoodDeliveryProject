@@ -1,0 +1,148 @@
+# Coisas a fazer:
+
+# Estudar Tabelas e suas Relações   X
+
+# Estudar Triggers e View do squema  X
+
+# Estudar Triggers e View do audit   X
+
+# Estudar os testes em Python    X
+
+# Entender os dockerfiles, docker composes e as configuraçoes (.cnf) X
+
+# Saber se a Replicacão é sincrona ou assincrona ? Como provar a resposta disso ?  É assincrona, porque o Master grava a transação e confirma para o usuário que 
+																				"está tudo bem" antes de saber se a réplica recebeu ou processou o dado
+
+# Saber se a Replicação é lógica ou fisica ? Como provar a resposta disso ?  é Lógica porque ela descreve mudanças em objetos do banco de dados (linhas, colunas, tabelas), 
+																			em vez de descrever mudanças em bits no disco rígido.
+
+
+docker exec -it food_delivery_master mariadb -u root -proot_password -e "SHOW BINLOG EVENTS IN 'mysql-bin.000001' LIMIT 10;"
+
+
+# Ter exemplos de possiveis implementações de FUNCTIONs e de PROCEDUREs
+
+# FUNCTION para calcular tempo médio de entrega de um restaurante 
+
+
+DELIMITER //
+
+CREATE FUNCTION fn_tempo_medio_entrega(restauranteId INT)
+RETURNS FLOAT
+DETERMINISTIC
+BEGIN
+    DECLARE tempo_medio FLOAT;
+
+    SELECT AVG(tempo_real_min)
+    INTO tempo_medio
+    FROM entregas
+    WHERE restaurante_id = restauranteId
+      AND estado = 'entregue';
+
+    RETURN tempo_medio;
+END//
+
+DELIMITER ;
+
+CREATE TRIGGER trg_entregas_tm
+AFTER UPDATE ON entregas
+FOR EACH ROW
+BEGIN
+    IF NEW.estado = 'entregue' AND OLD.estado <> 'entregue' THEN
+        INSERT INTO audit_log (tabela_nome, operacao, registro_id, dados_novos)
+        VALUES ('restaurantes', 'UPDATE', NEW.restaurante_id,
+            JSON_OBJECT(
+                'tempo_medio_entrega',
+                fn_tempo_medio_entrega(NEW.restaurante_id)
+            )
+        );
+    END IF;
+END;
+
+# Trocar os triggers q já tenho por uma function com 3 trigers diferentes a chamar
+
+CREATE FUNCTION fn_calcular_total_pedido(pedidoId INT)
+RETURNS FLOAT
+DETERMINISTIC
+BEGIN
+    DECLARE total_pedido FLOAT;
+
+    SELECT COALESCE(SUM(pp.quantidade * pr.preco), 0)
+    INTO total_pedido
+    FROM pedidos_pratos pp
+    JOIN pratos pr ON pp.prato_id = pr.id
+    WHERE pp.pedido_id = pedidoId;
+
+    RETURN total_pedido;
+END;
+
+
+DELIMITER $$
+
+DROP TRIGGER IF EXISTS trg_pedidos_pratos_ai $$
+CREATE TRIGGER trg_pedidos_pratos_ai
+AFTER INSERT ON pedidos_pratos
+FOR EACH ROW
+BEGIN
+    UPDATE pedidos
+    SET total = fn_calcular_total_pedido(NEW.pedido_id)
+    WHERE id = NEW.pedido_id;
+END $$
+
+DELIMITER ;
+
+DELIMITER $$
+
+DROP TRIGGER IF EXISTS trg_pedidos_pratos_ad $$
+CREATE TRIGGER trg_pedidos_pratos_ad
+AFTER DELETE ON pedidos_pratos
+FOR EACH ROW
+BEGIN
+    UPDATE pedidos
+    SET total = fn_calcular_total_pedido(OLD.pedido_id)
+    WHERE id = OLD.pedido_id;
+END $$
+
+DELIMITER ;
+
+DELIMITER $$
+
+DROP TRIGGER IF EXISTS trg_pedidos_pratos_au $$
+CREATE TRIGGER trg_pedidos_pratos_au
+AFTER UPDATE ON pedidos_pratos
+FOR EACH ROW
+BEGIN
+    UPDATE pedidos
+    SET total = fn_calcular_total_pedido(NEW.pedido_id)
+    WHERE id = NEW.pedido_id;
+END $$
+
+DELIMITER ;
+
+
+# PROCEDURE
+
+CREATE PROCEDURE sp_cancelar_pedido (
+    IN p_pedido_id INT
+)
+BEGIN
+    START TRANSACTION;
+
+    UPDATE entregas
+    SET estado = 'cancelado'
+    WHERE pedido_id = p_pedido_id;
+
+    DELETE FROM pedidos_pratos
+    WHERE pedido_id = p_pedido_id;
+
+    DELETE FROM pedidos
+    WHERE id = p_pedido_id;
+
+    COMMIT;
+END $$
+
+DELIMITER ;
+
+CALL sp_cancelar_pedido(pedidos_id);
+
+
